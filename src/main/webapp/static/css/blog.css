@@ -1,0 +1,15 @@
+body {
+	word-wrap: break-word;
+}
+
+.lucene-highlight-title {
+	background: aquamarine
+}
+
+.lucene-highlight-tag {
+	background: #ffff00
+}
+
+.lucene-highlight-summary{
+	background: #80ff00
+}
