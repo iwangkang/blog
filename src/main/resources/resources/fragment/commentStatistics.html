@@ -1,0 +1,11 @@
+<div class="panel panel-default" th:if="${commentStatistics != null}">
+	<div class="panel-heading">
+		<h3 class="panel-title">评论统计</h3>
+	</div>
+	<ul class="list-group">
+		<li class="list-group-item"><strong>文章评论数：</strong><span
+			th:text="${commentStatistics.totalArticleComments}"></span></li>
+		<li class="list-group-item"><strong>页面评论数：</strong><span
+			th:text="${commentStatistics.totalPageComments}"></span></li>
+	</ul>
+</div>
