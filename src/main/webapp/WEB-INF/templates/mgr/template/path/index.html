@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<head th:replace="mgr/base/head :: head('物理文件模板管理')"></head>
+<body>
+	<nav th:replace="mgr/base/nav :: active('tpl-path')"></nav>
+	<div id="page-wrapper" style="padding: 10px">
+		<div class="container-fluid" th:if="${error != null}">
+			<div class="row" style="margin-bottom: 10px">
+				<div class="col-md-8 col-md-offset-2">
+					<div class="alert alert-danger" th:text="${messages.getMessage(error)}"></div>
+				</div>
+			</div>
+		</div>
+		<div class="container-fluid" th:if="${error == null}">
+			<div class="row" style="margin-bottom: 10px">
+				<div class="col-md-8 col-md-offset-2">
+					<a class="btn btn-default" th:href="${urls.url+'/mgr/template/path/build'}">新增</a>
+				</div>
+			</div>
+			<div class="row" style="margin-bottom: 10px">
+				<div class="col-md-8 col-md-offset-2">
+					<div class="input-group">
+					  <input type="text" class="form-control" placeholder="相对路径" aria-describedby="basic-addon2" th:value="${param.str}" id="search-str">
+					  <span class="input-group-addon">
+					  <span class="glyphicon glyphicon-refresh" aria-hidden="true" id="reload-icon" title="重新载入"></span>
+					  </span>
+					   <span class="input-group-addon" >
+					  <span class="glyphicon glyphicon-search" aria-hidden="true" id="search-icon" title="查询"></span>
+					  </span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-8 col-md-offset-2">
+					<div class="alert alert-info" th:if="${#lists.isEmpty(templates)}">当前没有任何物理文件模板</div>
+					<div class="table-responsive"
+						th:unless="${#lists.isEmpty(templates)}">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>物理地址(相对)</th>
+									<th>访问路径</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:each="template : ${templates}">
+									<td>
+										<span th:if="${template.registrable}" th:text="${template.relativePath}+'.reg.html'"></span>
+										<span th:if="${!template.pub && !template.registrable}" th:text="${template.relativePath}+'.html'"></span>
+										<span th:if="${template.pub}" th:text="${template.relativePath}+'.pub.html'"></span>
+									</td>
+									<td
+										th:text="${template.relativePath == '' ? '/' : template.relativePath}"></td>
+									<td>
+										
+										<a
+										th:href="@{/mgr/template/path/build(path=${template.relativePath})}"
+										style="margin-right: 20px"
+										>编辑</a>
+										
+										<a
+										href="###" style="margin-right: 20px" th:data-path="${template.relativePath}" data-action="delete">删除</a>
+										</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="modal " id="reloadModal" tabindex="-1" role="dialog"
+		aria-labelledby="reloadModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="reloadModalLabel">载入信息</h4>
+				</div>
+				<div class="modal-body">
+					<div class="container-fluid" id="info"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+				</div>
+			</div>
+		</div>
+	<div th:replace="base/foot_source"></div>
+	<script type="text/javascript" th:src="@{/static/js/mgr/common.js}"></script>
+	<script type="text/javascript">
+	var needReload=false;
+		$(document).ready(function(){
+			$("#reload-icon").click(function(){
+				reload($(this).parent().prev().val());
+			});
+			$("#search-icon").click(function(){
+				var query = $(this).parent().prev().prev().val();
+				window.location.href = basePath+'/mgr/template/path/index?str='+query;
+			});
+			$("#reloadModal").on('hidden.bs.modal', function () {
+				if(needReload){
+					window.location.reload();
+				}
+			})
+			$("a[data-action='delete']").click(function(){
+				var path = $(this).attr("data-path");
+				deleteTemplate(path);
+			});
+			$("#search-str").keydown(function(e) {  
+		    	if (e.keyCode == 13) {  
+		    		$("#search-icon").click();
+		    	}  
+		   	});  
+		});
+		var flag = true;
+		function reload(path) {
+			if(flag){
+				flag = false;
+				$.get(basePath + '/mgr/template/path/reload', {
+					"path" : path
+				}, function(data) {
+					if (data.success) {
+						var records = data.data;
+						if(records.length == 0){
+							bootbox.alert("没有需要载入的文件");
+						} else {
+							needReload = true;
+							var html = '';
+							html += '<div class="table-reponsive">';
+							html += '<table class="table">';
+							html += '<tbody>';
+							for(var i=0;i<records.length;i++){
+								var record = records[i];
+								html += '<tr>';
+								var path = record.path;
+								if(path == ''){
+									path = '/';
+								}
+								if(path){
+									html += '<td>'+path+'</td>';
+								}
+								if(record.success){
+									html += '<td class="text text-success">'+record.message+'</td>';
+								}else{
+									html += '<td class="text text-warning">'+record.message+'</td>';
+								}
+								html += '</tr>';
+							}
+							html += '</tbody>';
+							html += '</table>';
+							html += '</div>';
+							$("#info").html(html);
+							$("#reloadModal").modal('show');
+						}
+					} else {
+						bootbox.alert(data.message);
+					}
+					flag = true;
+				});
+			}
+		}
+		
+		function deleteTemplate(path) {
+			bootbox.confirm("确定要删除这个模板吗？这将无法被恢复！！！",function(result){
+				if(result){
+					$.post(basePath+'/mgr/template/path/delete',{"path":path},function(data){
+						if(data.success){
+							bootbox.alert("删除成功");
+							setTimeout(function(){
+								window.location.reload();
+							}, 500);
+						}else{
+							bootbox.alert(data.message);
+						}
+					});
+				}
+			});
+		}	
+	</script>
+</body>
+</html>

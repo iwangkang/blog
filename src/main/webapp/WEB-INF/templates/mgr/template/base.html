@@ -1,0 +1,14 @@
+<div id="page-wrapper" style="padding: 10px">
+	<div class="container-fluid">
+		<div class="row">
+			<div th:replace="mgr/template/editor :: editor(${page.tpl})"></div>
+			<div class="col-md-12 " style="margin-top: 10px; text-align: center">
+				<button class="btn btn-primary" type="button" onclick="preview()">预览</button>
+				<button class="btn btn-primary" type="button" onclick="save()">提交</button>
+			</div>
+		</div>
+	</div>
+</div>
+<input type="hidden" id="editor_mode" value="HTML" />
+<div th:replace="base/foot_source"></div>
+<div th:replace="mgr/template/source"></div>

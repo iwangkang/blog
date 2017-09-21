@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head th:replace="mgr/template/head :: head('自定义页面页面模板编辑')"></head>
+<body>
+	<nav th:replace="mgr/base/nav :: active('tpl-user')"></nav>
+	<div id="page-wrapper" style="padding: 10px">
+		<div class="container-fluid">
+			<div class="row">
+				<div th:replace="mgr/template/editor :: editor(${page.tpl})"></div>
+			</div>
+			<div class="row">
+				<div style="margin-top: 10px">
+					<div class="col-md-2">
+						<label>页面名称(1~20个字符)：</label>
+					</div>
+					<div class="col-md-10">
+						<input type="text" class="form-control" th:value="${page.name}"
+							id="name"> <input type="text" style="display: none">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div style="margin-top: 10px">
+					<div class="col-md-2">
+						<label>页面别名(1~30个字符,只能包含英文和数字以及-和_，不能为纯数字)：</label>
+					</div>
+					<div class="col-md-10">
+						<input type="text" class="form-control" th:value="${page.alias}"
+							id="alias"> <input type="text" style="display: none">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div style="margin-top: 10px">
+					<div class="col-md-2">
+						<label>所属空间：</label>
+					</div>
+					<div class="col-md-10">
+						<select class="form-control" id="spaceSelect">
+							<option th:if="${page.space != null}" th:value="${page.space.id}"
+								th:text="${page.space.name}"></option>
+							<option value="">无</option>
+							<option th:each="space : ${spaces}" th:value="${space.id}"
+								th:text="${space.name}"></option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div style="margin-top: 10px">
+					<div class="col-md-2">
+						<label>描述(0~500个字符)：</label>
+					</div>
+					<div class="col-md-10">
+						<textarea rows="8" cols="8" class="form-control" id="description"></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="checkbox">
+				<label
+					th:if="${page.allowComment == null || !page.allowComment}">
+					<input type="checkbox" id="allowComment" />允许评论
+				</label> <label
+					th:if="${page.allowComment != null && page.allowComment}"><input
+					type="checkbox" id="allowComment" checked="checked" />允许评论 </label>
+			</div>
+			<div class="row">
+				<div class="col-md-12 " style="margin-top: 10px; text-align: center">
+					<form style="display: none" id="tplForm">
+						<input type="hidden"
+							th:value="${page.space == null ? '' : page.space.id}" id="space">
+						<input type="hidden" th:value="${page.id}" id="pageId">
+					</form>
+					<button class="btn btn-primary" type="button" onclick="preview()">预览</button>
+					<button class="btn btn-primary" type="button" onclick="save()">提交</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal " id="fragmentsModal" tabindex="-1" role="dialog"
+		aria-labelledby="fragmentsLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="fragmentsModalLabel">挂件</h4>
+				</div>
+				<div class="modal-body">
+					<div class="tip"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+				</div>
+			</div>
+		</div>
+	</div>
+<input type="hidden" id="editor_mode" value="HTML" />
+	<div th:replace="base/foot_source"></div>
+	<script type="text/javascript" th:src="@{/static/js/mgr/common.js}"></script>
+	<div th:replace="mgr/template/source"></div>
+	<script type="text/javascript"
+		th:src="@{/static/js/mgr/tplbuild_base.js}"></script>
+	<script type="text/javascript"
+		th:src="@{/static/js/mgr/tplbuild_user.js}"></script>
+</body>
+</html>

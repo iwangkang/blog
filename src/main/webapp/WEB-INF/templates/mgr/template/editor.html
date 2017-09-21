@@ -1,0 +1,140 @@
+<div class="col-md-12" th:fragment="editor(content)">
+	<div class="md-header btn-toolbar">
+		<div class="btn-group">
+			<button class="btn-default btn-sm btn" type="button"
+				data-handler="file">文件</button>
+			<button class="btn-default btn-sm btn" type="button"
+				data-handler="format">格式化</button>
+			<button class="btn-default btn-sm btn" type="button"
+				data-handler="lookup-data">数据标签</button>
+			<button class="btn-default btn-sm btn" type="button"
+				data-handler="lock">锁</button>
+		</div>
+	</div>
+	<textarea style="display: none;" th:text="${content}" id="editor"></textarea>
+
+	<div class="modal" id="lookupDataModal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">数据标签查询</h4>
+				</div>
+				<div class="modal-body">
+					<div class="panel-group" role="tablist" aria-multiselectable="true">
+						<div class="panel panel-default">
+							<div class="panel-heading" role="tab">
+								<h4 class="panel-title">
+									<a role="button" data-toggle="collapse"
+										data-parent="#accordion" href="#collapseOne"
+										aria-expanded="true" aria-controls="collapseOne"> 文章归档</a>
+								</h4>
+							</div>
+							<div id="collapseOne" class="panel-collapse collapse"
+								role="tabpanel" aria-labelledby="headingOne">
+								<div class="panel-body">
+									<label>示例</label>
+									<pre>&lt;data name="文章归档" mode="YMD" /&gt;</pre>
+									<pre>&lt;data name="文章归档" dataName="archives" mode="YMD" /&gt;</pre>
+									<label>标签属性</label>
+									<div class="table-responsive">
+										<table class="table">
+											<tr>
+												<th>属性名</th>
+												<th>类型</th>
+												<th>是否必须</th>
+												<th>默认值</th>
+												<th>允许值</th>
+											</tr>
+											<tr>
+												<td>mode</td>
+												<td>枚举</td>
+												<td>否</td>
+												<td>YMD</td>
+												<td>YMD|YM|Y</td>
+											</tr>
+										</table>
+									</div>
+									<label>返回結果</label>
+									<p>
+										返回一个<b>不为null</b>的ArticleArchiveTree对象，默认dataName为<b>archives</b>，通过访问<b>nodes</b>属性可以进行遍历，根据归档模式不同，nodes内容也有所不同，不同归档模式说明如下
+									</p>
+									<p>
+										<label>YMD</label>
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading" role="tab" id="headingTwo">
+								<h4 class="panel-title">
+									<a class="collapsed" role="button" data-toggle="collapse"
+										data-parent="#accordion" href="#collapseTwo"
+										aria-expanded="false" aria-controls="collapseTwo">
+										Collapsible Group Item #2 </a>
+								</h4>
+							</div>
+							<div id="collapseTwo" class="panel-collapse collapse"
+								role="tabpanel" aria-labelledby="headingTwo">
+								<div class="panel-body">Anim pariatur cliche
+									reprehenderit, enim eiusmod high life accusamus terry
+									richardson ad squid. 3 wolf moon officia aute, non cupidatat
+									skateboard dolor brunch. Food truck quinoa nesciunt laborum
+									eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on
+									it squid single-origin coffee nulla assumenda shoreditch et.
+									Nihil anim keffiyeh helvetica, craft beer labore wes anderson
+									cred nesciunt sapiente ea proident. Ad vegan excepteur butcher
+									vice lomo. Leggings occaecat craft beer farm-to-table, raw
+									denim aesthetic synth nesciunt you probably haven't heard of
+									them accusamus labore sustainable VHS.</div>
+							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading" role="tab" id="headingThree">
+								<h4 class="panel-title">
+									<a class="collapsed" role="button" data-toggle="collapse"
+										data-parent="#accordion" href="#collapseThree"
+										aria-expanded="false" aria-controls="collapseThree">
+										Collapsible Group Item #3 </a>
+								</h4>
+							</div>
+							<div id="collapseThree" class="panel-collapse collapse"
+								role="tabpanel" aria-labelledby="headingThree">
+								<div class="panel-body">Anim pariatur cliche
+									reprehenderit, enim eiusmod high life accusamus terry
+									richardson ad squid. 3 wolf moon officia aute, non cupidatat
+									skateboard dolor brunch. Food truck quinoa nesciunt laborum
+									eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on
+									it squid single-origin coffee nulla assumenda shoreditch et.
+									Nihil anim keffiyeh helvetica, craft beer labore wes anderson
+									cred nesciunt sapiente ea proident. Ad vegan excepteur butcher
+									vice lomo. Leggings occaecat craft beer farm-to-table, raw
+									denim aesthetic synth nesciunt you probably haven't heard of
+									them accusamus labore sustainable VHS.</div>
+							</div>
+						</div>
+					</div>
+
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal" id="lockModal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">锁</h4>
+				</div>
+				<div class="modal-body" id="lockBody"></div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>

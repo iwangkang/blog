@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<head th:replace="mgr/template/head :: head('物理文件模板编辑')"></head>
+<body>
+	<nav th:replace="mgr/base/nav :: active('tpl-user')"></nav>
+	<div id="page-wrapper" style="padding: 10px">
+		<div class="container-fluid">
+			<div class="row">
+				<div th:replace="mgr/template/editor :: editor(${pathTemplate.tpl})"></div>
+			</div>
+			<div class="row">
+				<div style="margin-top: 10px">
+					<div class="col-md-2">
+						<label>路径：</label>
+					</div>
+					<div class="col-md-10">
+						<input type="text" class="form-control"
+							th:value="${pathTemplate.path}" id="path"> <input
+							type="text" style="display: none">
+					</div>
+				</div>
+			</div>
+			<div class="checkbox">
+				<label th:if="${!pathTemplate.pub}"> <input type="checkbox"
+					id="pub" />公共fragment
+				</label><label th:if="${pathTemplate.pub}"> <input type="checkbox" checked="checked"
+					id="pub" />公共fragment
+				</label>
+			</div>
+			
+				<div class="checkbox">
+				<label th:if="${!pathTemplate.registrable}"> <input type="checkbox"
+					id="registrable" />注册路径
+				</label><label th:if="${pathTemplate.registrable}"> <input type="checkbox" checked="checked"
+					id="registrable" />注册路径
+				</label>
+			</div>
+			<div class="row">
+				<div class="col-md-12 " style="margin-top: 10px; text-align: center">
+					<button class="btn btn-primary" type="button" onclick="preview()">预览</button>
+					<button class="btn btn-primary" type="button" onclick="save()">提交</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal " id="fragmentsModal" tabindex="-1" role="dialog"
+		aria-labelledby="fragmentsLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="fragmentsModalLabel">挂件</h4>
+				</div>
+				<div class="modal-body">
+					<div class="tip"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<input type="hidden" id="editor_mode" value="HTML" />
+	<div th:replace="base/foot_source"></div>
+	<script type="text/javascript" th:src="@{/static/js/mgr/common.js}"></script>
+	<div th:replace="mgr/template/source"></div>
+	<script type="text/javascript"
+		th:src="@{/static/js/mgr/tplbuild_base.js}"></script>
+		
+		<script type="text/javascript">
+			$(document).ready(function(){
+				$("#pub").change(function(){
+					if($(this).is(":checked")){
+						$("#registrable").prop("checked",false);
+					}
+				})	
+				$("#registrable").change(function(){
+					if($(this).is(":checked")){
+						$("#pub").prop("checked",false);
+					}
+				})	
+			});
+			
+			function save(){
+				var bean = {"tpl":editor.getValue()};
+				bean.pub = $("#pub").is(":checked");
+				bean.registrable = $("#registrable").is(":checked");
+				bean.path = $("#path").val();
+				$.ajax({
+					type : "post",
+					url : basePath + '/mgr/template/path/build',
+					data : JSON.stringify(bean),
+					dataType : "json",
+					contentType : 'application/json',
+					success : function(data){
+						if (data.success) {
+							bootbox.alert("保存成功");
+							setTimeout(function() {
+								window.location.href = basePath+'/mgr/template/path/index';
+							}, 500);
+						} else {
+							bootbox.alert(data.message);
+						}
+					},
+					complete:function(){
+					
+					}
+				});
+			}
+			
+			
+			function preview(){
+				if(!$("#registrable").is(":checked")){
+					bootbox.alert("只有注册文件才能被预览");
+					return ;
+				}
+				var bean = {"tpl":editor.getValue()};
+				bean.pub = $("#pub").is(":checked");
+				bean.registrable = $("#registrable").is(":checked");
+				bean.path = $("#path").val();
+				$.ajax({
+					type : "post",
+					url : basePath + '/mgr/template/path/preview',
+					data : JSON.stringify(bean),
+					dataType : "json",
+					contentType : 'application/json',
+					success : function(data){
+						if (data.success) {
+							var url = data.data;
+							if(url.hasPathVariable){
+								bootbox.dialog({
+									title : '预览地址',
+									message : '预览路径为<p><b>'+url.url+'</b></p><p>该地址中包含可变参数，请自行访问</p>',
+									buttons : {
+										success : {
+											label : "确定",
+											className : "btn-success"
+										}
+									}
+								});
+							} else {
+								var win = window.open(url.url,
+									'_blank');
+								win.focus();
+							}
+						} else {
+							bootbox.alert(data.message);
+						}
+					},
+					complete:function(){
+					
+					}
+				});
+			}
+		</script>
+</body>
+</html>
