@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<link rel="stylesheet"
+	th:href="@{/static/bootstrap/css/bootstrap.min.css}" />
+<link th:href="@{/static/css/blog.css}" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+	  <script th:src="@{/static/js/html5shiv.min.js}"></script>
+	  <script th:src="@{/static/js/respond.min.js}"></script>
+	<![endif]-->
+<title th:text="${space == null ? '主页' : space.name}"></title>
+</head>
+<body>
+	<fragment name="顶部导航" />
+	<div class="container">
+		<div class="row">
+			<div class="col-md-8">
+				<form id="loginForm" method="post">
+					<div class="form-group">
+						<label for="username">用户名 </label> <input type="text"
+							class="form-control" placeholder="用户名" id="username"
+							name="username" value="">
+					</div>
+					<div class="form-group">
+						<label for="password">密码 </label> <input type="password"
+							class="form-control" placeholder="密码" id="password"
+							name="password" value="">
+					</div>
+					<div class="form-group" style="display:none" id="captchaContainer">
+						<label for="captcha">验证码 </label>
+						<div style="margin-bottom: 10px">
+							<img th:src="@{/captcha}" class="img-responsive" id="validateImg" />
+						</div>
+						<input type="text" class="form-control" name="validateCode"
+							id="validateCode" placeholder="验证码">
+					</div>
+					<button type="button" id="login-btn" class="btn btn-default">登录
+					</button>
+				</form>
+				<form id="optVerifyForm" style="display:none">
+					<div class="form-group">
+						<label for="username">动态口令 </label> <input type="text"
+							class="form-control" placeholder="动态口令 " id="otpCode">
+					</div>
+					<button type="button" id="verify-btn" class="btn btn-default">登录
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<fragment name="底部" />
+	<div th:replace="base/foot_source">&nbsp;</div>
+	<script type="text/javascript">
+     $(document).ready(function(){
+    	 var validateCodeClone = $("#captchaContainer").clone();
+    	 $.get(rootPath+'/login/needCaptcha',{},function(flag){
+    		 if(flag){
+    			 $("#captchaContainer").show();
+    		 }else{
+     			 $("#captchaContainer").hide();
+     		 }
+    	 })
+        $("#login-btn").click(function(){
+        var username = $("#username").val();
+          var password = $("#password").val();
+          var validateCode = $("#validateCode").val();
+          $.ajax({
+            type : "post",
+            url : rootPath+'/login?validateCode='+validateCode,
+            data : JSON.stringify({
+              "username" : username,
+              "password" : password
+            }),
+            dataType : "json",
+            contentType : 'application/json',
+            success : function(data) {
+              if (data.success) {
+                if(data.data){
+                	window.location.href = data.data;
+                } else {
+                	window.location.href = rootPath;
+                }
+              } else {
+            	  if(data.code == 'otp.required'){
+            		  $("#loginForm").remove();
+            		  $("#optVerifyForm").show();
+            	  } else {
+            		  $.get(rootPath+'/login/needCaptcha',{},function(flag){
+                  		 if(flag){
+                  			 $("#captchaContainer").show();
+                  		 }else{
+                  			 $("#captchaContainer").hide();
+                  		 }
+                  		bootbox.alert(data.message);
+                  	 })
+            	  }
+              }
+            },
+            complete : function() {
+             $("#validateImg").attr("src",rootPath+'/captcha?time='+$.now())
+            }
+          });
+        });
+    	 
+    	 $("#verify-btn").click(function(){
+    		 var url = basePath+"/login/otpVerify?code="+$("#otpCode").val();
+    		 if($("#validateCode").length > 0){
+    			 url += "&validateCode="+$("#validateCode").val();
+    		 }
+    		 $.ajax({
+					type : "post",
+					url : url,
+					data : {},
+					contentType : 'application/json',
+					success : function(data){
+						if(data.success){
+							if(data.data){
+			                	window.location.href = data.data;
+			                } else {
+			                	window.location.href = rootPath;
+			                }
+						} else {
+							$.get(rootPath+'/login/needCaptcha',{},function(flag){
+		                  		 if(flag){
+		                  			 console.log(validateCodeClone)
+		                  			 if($("#captchaContainer").length == 0){
+		                  				$("#optVerifyForm").find('.form-group').eq(0).after(validateCodeClone);
+		                  				$("#captchaContainer").show();
+		                  			 }
+		                  		 }else{
+		                  			$("#captchaContainer").remove();
+		                  		 }
+		                   		bootbox.alert(data.message);
+		                  	 })
+						}
+					},
+					complete:function(){
+						if($("#validateImg").length > 0)
+							$("#validateImg").attr("src",rootPath+'/captcha?time='+$.now())
+					}
+				});
+    	 });
+        });
+    </script>
+</body>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		   					 http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		   					 http://www.springframework.org/schema/task
+		   					 http://www.springframework.org/schema/task/spring-task-4.0.xsd ">
+	<!-- 图片处理 -->
+	<bean class="me.wangkang.blog.core.file.JavaImageHelper"/>
+	<!-- 纯java的图片处理，会占用较大的内存和cpu！！ -->
+	<!-- 文件服务 -->
+	<bean class="me.wangkang.blog.core.file.DefaultFileManager"/>
+
+	<task:scheduled-tasks scheduler="taskScheduler">
+		<task:scheduled ref="fileService" method="clear" cron="0 0 3 * * ?" />
+	</task:scheduled-tasks>
+</beans>      

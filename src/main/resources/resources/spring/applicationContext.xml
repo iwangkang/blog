@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		   					 http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+						     http://www.springframework.org/schema/context 
+						     http://www.springframework.org/schema/context/spring-context-4.0.xsd
+						     http://www.springframework.org/schema/aop 
+						     http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+						     http://www.springframework.org/schema/tx 
+						     http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+						      http://www.springframework.org/schema/cache 
+						     http://www.springframework.org/schema/cache/spring-cache-4.0.xsd 
+						     http://www.springframework.org/schema/task
+		   					 http://www.springframework.org/schema/task/spring-task-4.0.xsd ">
+
+
+	<context:property-placeholder
+		location="classpath:resources/mybatis/db.properties,
+				  classpath:resources/app.properties,
+				  classpath:resources/mail.properties" />
+
+	<!-- mysql -->
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource"
+		destroy-method="close">
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}" />
+		<property name="driverClassName" value="${jdbc.driverClass}" />
+		<property name="username" value="${jdbc.user}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="poolName" value="blogCP" />
+		<property name="dataSourceProperties">
+			<props>
+				<prop key="cachePrepStmts">true</prop>
+				<prop key="prepStmtCacheSize">250</prop>
+				<prop key="prepStmtCacheSqlLimit">2048</prop>
+				<prop key="useServerPrepStmts">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 配置SqlSessionFactory -->
+	<bean id="sqlSessionFactory" 
+		class="org.mybatis.spring.SqlSessionFactoryBean"
+		p:configLocation="classpath:resources/mybatis/mybatis-config.xml"
+		p:dataSource-ref="dataSource" />
+
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		p:dataSource-ref="dataSource" />
+		
+	<tx:annotation-driven transaction-manager="txManager" />
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage"
+			value="me.wangkang.blog.core.dao,
+				   me.wangkang.blog.core.lock,
+				   me.wangkang.blog.web.template.dao" />
+	</bean>
+
+	<import resource="file.xml" />
+	
+	<context:component-scan
+		base-package="me.wangkang.blog.core.service,
+					  me.wangkang.blog.core.config,
+					  me.wangkang.blog.core.security,
+					  me.wangkang.blog.core.lock" />
+
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+
+	<cache:annotation-driven />
+	<!-- 缓存配置 -->
+	<bean id="cacheManager" 
+		  class="org.springframework.cache.caffeine.CaffeineCacheManager">
+		<property name="cacheSpecification" 
+				  value="maximumSize=500,expireAfterAccess=20m" />
+	</bean>
+
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames" value="classpath:resources/messages/message" />
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+
+	<bean class="me.wangkang.blog.core.message.Messages"/>
+
+	<bean id="articleIndexer" class="me.wangkang.blog.core.service.impl.JcsegArticleIndexer">
+		<constructor-arg index="0" value="SEARCH" />
+	</bean>
+
+	<!-- 如果不需要邮件通知这个服务请不要设置 -->
+	<bean id="mailSender" class="me.wangkang.blog.support.mail.MailSender" />
+
+	<!-- 如果不需要邮件通知这个服务请不要设置 -->
+	<bean id="javaMailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="protocol" value="${mail.protocol}" />
+		<property name="host" value="${mail.host}" />
+		<property name="port" value="${mail.port}" />
+		<property name="username" value="${mail.username}" />
+		<property name="password" value="${mail.password}" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">${mail.smtp.auth}</prop>
+				<prop key="mail.from">${mail.from}</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- article content handler -->
+	<bean class="me.wangkang.blog.core.service.impl.ArticleContentHandlers">
+		<property name="handlers">
+			<list>
+				<bean class="me.wangkang.blog.core.service.impl.DefaultArticleContentHandler" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 缓存点击策略 -->
+	<bean id="cacheableHitsStrategy" class="me.wangkang.blog.core.service.impl.CacheableHitsStrategy" />
+	
+	<!-- 纪录最近被访问的文章 -->
+	<bean class="me.wangkang.blog.core.service.impl.SyncArticleViewdLogger"/>
+	
+	<!-- 文章缓存 -->
+	<bean class="me.wangkang.blog.core.service.impl.ArticleCache"/>
+	<bean id="articleService" class="me.wangkang.blog.core.service.impl.ArticleServiceImpl"/>
+
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"
+		destroy-method="destroy">
+		<property name="awaitTerminationSeconds" value="60" />
+		<property name="waitForTasksToCompleteOnShutdown" value="true" />
+	</bean>
+
+	<bean id="taskScheduler"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler"
+		destroy-method="destroy">
+		<property name="errorHandler" ref="loggingErrorHandler" />
+		<property name="poolSize" value="10" />
+		<property name="awaitTerminationSeconds" value="60" />
+		<property name="waitForTasksToCompleteOnShutdown" value="true" />
+	</bean>
+
+	<task:annotation-driven executor="taskExecutor"
+		scheduler="taskScheduler" proxy-target-class="true" />
+
+	<!-- Google Auth -->
+	<!-- 
+	<bean class="me.wangkang.blog.core.security.GoogleAuthenticator">
+		<constructor-arg value="qz23 fugf krvd krh6 cors 4lpq jw3y ilxy"/>
+	</bean>
+	 -->
+	
+	<bean id="htmlClean" class="me.wangkang.blog.core.security.input.DefaultHtmlClean" />
+	<bean id="simpleCommentChecker" class="me.wangkang.blog.core.service.impl.SimpleCommentChecker">
+		<property name="disallowUsernamePatterns">
+			<array>
+				<value>wangkang</value>
+				<value>mhlx</value>
+				<value>梦海澜心</value>
+				<value>钱宇豪</value>
+			</array>
+		</property>
+		<property name="disallowEmailPatterns">
+			<array>
+				<value>*@wangkang.me</value>
+				<value>1187500344@qq.com</value>
+			</array>
+		</property>
+	</bean>
+
+	<!-- 默认评论服务 -->
+	<!-- 评论服务邮件提醒 -->
+	<bean id="commentEmailNotifySupport" class="me.wangkang.blog.core.service.impl.CommentEmailNotifySupport">
+		<property name="mailSubject" value="您有新的评论" />
+	</bean>
+	<bean class="me.wangkang.blog.core.service.impl.CommentService"/>
+	
+	<!-- 定时任务 -->
+	<task:scheduled-tasks scheduler="taskScheduler">
+
+		<!-- 凌晨一点更新sitemap -->
+		<task:scheduled ref="xmlSiteMap" method="updateSitemap"
+			cron="0 0 1 * * ?" />
+
+		<!-- 如果配置了缓存点击量策略，那么每隔600s更新文章点击量 -->
+		<task:scheduled ref="cacheableHitsStrategy" method="flush"
+			fixed-rate="600000" />
+
+		<!-- 默认5秒查询一次 待发布的文章 -->
+		<task:scheduled ref="articleService" method="publishScheduled"
+			fixed-rate="5000" />
+
+		<!-- 如果配置了评论邮件通知服务 -->
+		<!-- 每隔5s中将队列中的评论取出来放到待发送列表中 -->
+		<task:scheduled ref="commentEmailNotifySupport" method="processToSend"
+			fixed-rate="5000" />
+		<!-- 每隔300s中发送待发送邮件 -->
+		<task:scheduled ref="commentEmailNotifySupport" method="forceSend"
+			fixed-rate="300000" />
+
+
+		<!-- 每延迟1秒发送邮件队列中的第一封邮件 -->
+		<task:scheduled ref="mailSender" method="sendMailFromQueue"
+			fixed-delay="1000" />
+
+		<!-- 每隔30min将索引写入物理文件 -->
+		<task:scheduled ref="articleIndexer" method="commit"
+			fixed-rate="1800000" />
+	</task:scheduled-tasks>
+
+	
+
+	<!-- 博客ping服务 -->
+	<bean id="pingManager" class="me.wangkang.blog.support.ping.SimplePingManager">
+		<constructor-arg value="钱宇豪的个人博客" />
+		<property name="pingServices">
+			<list>
+				<bean class="me.wangkang.blog.support.ping.GoogleBlogPingService" />
+				<bean class="me.wangkang.blog.support.ping.BaiduBlogPingService" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- sitemap 服务 -->
+	<bean id="xmlSiteMap" class="me.wangkang.blog.support.sitemap.XmlSiteMap" />
+
+</beans>      

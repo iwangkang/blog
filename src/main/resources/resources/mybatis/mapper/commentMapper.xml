@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.wangkang.blog.core.dao.CommentDao">
+	
+	<resultMap type="Comment" id="CommentDetail">
+		<id property="id" column="id"/>
+		<result column="parent_path" property="parentPath"/>
+		<result column="content" property="content"/>
+		<result column="comment_date" property="commentDate"/>
+		<result column="comment_status" property="status" typeHandler="EnumOrdinalTypeHandler"/>
+		<result column="comment_nickname" property="nickname"/>
+		<result column="comment_email" property="email"/>
+		<result column="comment_ip" property="ip"/>
+		<result column="comment_admin" property="admin"/>
+		<result column="comment_gravatar" property="gravatar"/>
+		<result column="comment_website" property="website"/>
+		<result property="editor" column="comment_editor" typeHandler="EnumOrdinalTypeHandler" />
+		<association property="commentModule" javaType="CommentModule">
+			<result column="module_id" property="id"/>
+			<result column="module_type" property="type" typeHandler="EnumOrdinalTypeHandler"/>
+		</association>
+		<association property="parent" javaType="Comment">
+			<result column="parent_id" property="id"/>
+			<result column="p_comment_nickname" property="nickname"/>
+			<result column="p_comment_email" property="email"/>
+			<result column="p_comment_ip" property="ip"/>
+			<result column="p_comment_admin" property="admin"/>
+			<result column="p_comment_gravatar" property="gravatar"/>
+		<result property="editor" column="p_comment_editor" typeHandler="EnumOrdinalTypeHandler" />
+			<association property="commentModule" javaType="CommentModule">
+				<result column="p_module_id" property="id"/>
+				<result column="p_module_type" property="type" typeHandler="EnumOrdinalTypeHandler"/>
+			</association>
+		</association>
+	</resultMap>
+	
+	<resultMap type="me.wangkang.blog.core.vo.ModuleCommentCount" id="ModuleCommentCountDetail">
+		<id column="module_sign"/>
+		<result column="comments" property="comments"/>
+		<association property="module" javaType="CommentModule">
+			<result column="module_id" property="id"/>
+			<result column="module_type" property="type" typeHandler="EnumOrdinalTypeHandler"/>
+		</association>
+	</resultMap>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO blog_comment(parent_id,parent_path,content,module_type,module_id,comment_date,comment_status,comment_nickname,comment_email,comment_ip,comment_admin,comment_gravatar,comment_website,comment_editor)
+		VALUES(#{parent.id},#{parentPath},#{content},#{commentModule.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler},#{commentModule.id},#{commentDate},#{status,javaType=CommentStatus,typeHandler=EnumOrdinalTypeHandler},#{nickname},#{email},#{ip},#{admin},#{gravatar},#{website},#{editor,javaType=Editor,typeHandler=EnumOrdinalTypeHandler})
+	</insert>
+	
+	<select id="selectCountByIpAndDatePeriod" resultType="int">
+		SELECT COUNT(id) FROM blog_comment 
+		WHERE module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		AND module_id = #{module.id}
+		AND comment_ip = #{ip} 
+		AND comment_date BETWEEN #{begin} AND #{end} 
+	</select>
+	
+	<select id="selectCountWithTree" resultType="int">
+		SELECT COUNT(id) FROM blog_comment 
+		WHERE module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		AND module_id = #{module.id} 
+		AND parent_path = '/'
+		<if test="status != null">
+		   AND comment_status = #{status,javaType=CommentStatus,typeHandler=EnumOrdinalTypeHandler}
+		</if>
+	</select>
+	
+	<select id="selectCountWithList" resultType="int">
+		SELECT COUNT(id) FROM blog_comment 
+		WHERE module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		AND module_id = #{module.id} 
+		<if test="status != null">
+		   AND comment_status = #{status,javaType=CommentStatus,typeHandler=EnumOrdinalTypeHandler}
+		</if>
+	</select>
+	
+	<select id="selectPageWithTree" resultMap="CommentDetail">
+		 SELECT 
+		  a.id,a.parent_id,a.parent_path,a.content,a.module_id,a.module_type,a.comment_date,a.comment_status,a.comment_nickname,a.comment_email,a.comment_ip,a.comment_admin,a.comment_gravatar,a.comment_website,a.comment_editor
+		FROM 
+		  blog_comment a JOIN 
+		  (SELECT id, parent_path 
+		    FROM blog_comment 
+		    WHERE module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+			AND module_id = #{module.id} 
+			AND parent_path = '/'
+		    <if test="status != null">
+		   		AND comment_status = #{status,javaType=CommentStatus,typeHandler=EnumOrdinalTypeHandler}
+		    </if>
+		    <choose>
+		    	<when test="asc">
+		    		 ORDER BY comment_date ,id
+		    	</when>
+		    	<otherwise>
+		    		 ORDER BY comment_date DESC,id DESC
+		    	</otherwise>
+		    </choose>
+		  LIMIT #{offset},#{pageSize}) roots
+		  ON (a.parent_path LIKE CONCAT('/',roots.id,'/%') OR a.id=roots.id)
+		   <if test="status != null">
+		    WHERE a.comment_status = #{status,javaType=CommentStatus,typeHandler=EnumOrdinalTypeHandler}
+		    </if>
+	</select>
+	
+	<select id="selectPageWithList" resultMap="CommentDetail">
+		 SELECT 
+		  a.id,a.parent_id,a.parent_path,a.content,a.module_id,a.module_type,a.comment_editor,
+		  a.comment_date,a.comment_status,a.comment_nickname,a.comment_email,a.comment_ip,a.comment_admin,a.comment_gravatar,a.comment_website,
+		  p.comment_editor AS p_comment_edtior,p.comment_nickname AS p_comment_nickname,p.comment_email AS p_comment_email,p.comment_ip AS p_comment_ip,p.comment_admin AS p_comment_admin,p.comment_gravatar AS p_comment_gravatar,p.module_id AS p_module_id,p.module_type AS p_module_type
+		FROM 
+		  blog_comment a 
+		LEFT OUTER JOIN blog_comment p ON a.parent_id = p.id
+		WHERE a.module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		AND a.module_id = #{module.id} 
+		<if test="status != null">
+		  	AND a.comment_status = #{status,javaType=CommentStatus,typeHandler=EnumOrdinalTypeHandler}
+		    </if>
+		 <choose>
+	    	<when test="asc">
+	    		 ORDER BY a.comment_date ,id
+	    	</when>
+	    	<otherwise>
+	    		 ORDER BY a.comment_date DESC,id DESC
+	    	</otherwise>
+	    </choose>
+		LIMIT #{offset},#{pageSize}
+	</select>
+	
+	<delete id="deleteByPath">
+		DELETE FROM blog_comment  WHERE (parent_path LIKE CONCAT('', #{path},'%'))
+	</delete>
+	
+	<delete id="deleteById">
+		DELETE FROM blog_comment WHERE id = #{id}
+	</delete>
+	
+	<select id="selectById" resultMap="CommentDetail">
+		 SELECT 
+		  a.id,a.parent_id,a.parent_path,a.content,a.module_type,a.module_id,a.comment_date,comment_date,a.comment_status,a.comment_nickname,a.comment_email,a.comment_ip,a.comment_admin,a.comment_gravatar,a.comment_website,a.comment_editor
+		 FROM blog_comment a 
+		 WHERE a.id = #{id}
+	</select>
+	
+	<select id="selectLast" resultMap="CommentDetail">
+		 SELECT 
+		  a.id,a.parent_id,a.parent_path,a.content
+		 FROM blog_comment a 
+		 WHERE a.module_type = #{commentModule.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		 AND a.module_id = #{commentModule.id} 
+		 AND a.comment_ip = #{ip}
+		 <choose>
+		 	<when test="parent == null">
+		 		AND parent_path = '/'
+		 	</when>
+		 	<otherwise>
+		 		AND parent_id = #{parent.id}
+		 	</otherwise>
+		 </choose>
+		 ORDER BY a.comment_date DESC,id DESC
+		 LIMIT 0,1
+	</select>
+		
+	<update id="updateStatusToNormal">
+		UPDATE blog_comment SET comment_status = 0 WHERE id = #{id}
+	</update>
+	
+	<delete id="deleteByModule">
+		DELETE FROM blog_comment 
+		WHERE module_type = #{type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		AND module_id = #{id} 
+	</delete>
+	
+	
+	<select id="selectLastComments" resultMap="CommentDetail">
+		SELECT 
+		a.id,a.parent_id,a.parent_path,a.content,a.module_id,a.module_type,a.comment_status,a.comment_editor,
+		a.comment_date,a.comment_status,a.comment_nickname,a.comment_email,a.comment_ip,a.comment_admin,a.comment_gravatar,a.comment_website,
+		 p.comment_editor AS p_comment_edtior,p.module_id AS p_module_id,p.module_type AS p_module_type,
+		p.comment_nickname AS p_comment_nickname,p.comment_email AS p_comment_email,p.comment_ip AS p_comment_ip,p.comment_admin AS p_comment_admin,p.comment_gravatar AS p_comment_gravatar
+		FROM blog_comment a
+		LEFT OUTER JOIN blog_comment p ON a.parent_id = p.id
+		<choose>
+			<when test="module.type.name() == 'ARTICLE'">
+				LEFT OUTER JOIN blog_article ba ON a.module_id = ba.id
+				LEFT OUTER JOIN blog_space bs ON ba.space_id  = bs.id
+				WHERE ba.art_status = 0<!-- PUBLISHED -->
+				AND a.module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+				<if test="module.id != null">
+					AND a.module_id = #{module.id}
+				</if>
+				AND a.comment_status = 0<!-- NORMAL -->
+				<if test="space != null">
+					AND bs.id = #{space.id} 
+				</if>
+				<if test="!queryPrivate">
+					AND ba.isPrivate = FALSE 
+					AND bs.is_private = FALSE
+					AND ba.art_lock IS NULL
+					AND bs.space_lock IS NULL
+				</if>
+				<if test="!queryAdmin">
+					AND a.comment_admin = FALSE
+				</if>
+			</when>
+			<otherwise>
+				LEFT OUTER JOIN blog_page_user bpu ON a.module_id = bpu.id
+				LEFT OUTER JOIN blog_space bs ON bpu.space_id  = bs.id
+				WHERE a.comment_status = 0
+				AND a.module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+				<if test="module.id != null">
+					AND a.module_id = #{module.id}
+				</if>
+				<choose>
+					<when test="space == null">
+						AND bs.id IS NULL
+					</when>
+					<otherwise>
+						AND bs.id = #{space.id}
+						<if test="!queryPrivate">
+							AND bs.is_private = FALSE
+						</if>
+					</otherwise>
+				</choose>
+				<if test="!queryAdmin">
+					AND a.comment_admin = FALSE
+				</if>
+			</otherwise>
+		</choose>
+		ORDER BY a.comment_date DESC ,a.id DESC
+		LIMIT 0,#{limit}
+	</select>
+	
+	
+	
+	<select id="selectCommentCounts" resultMap="ModuleCommentCountDetail" >
+		SELECT a.module_id,a.module_type,CONCAT(a.module_type,'_',a.module_id) AS module_sign,COUNT(*) AS comments FROM blog_comment a
+		WHERE a.comment_status = 0<!-- NORMAL -->
+		AND ( <foreach collection="list" item="module" open="" close="" separator="OR">
+			(a.module_type = #{module.type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		 	AND a.module_id = #{module.id} )
+		</foreach> )
+		GROUP BY a.module_type,a.module_id
+	</select>
+	
+	<select id="selectCommentCount" resultMap="ModuleCommentCountDetail" >
+		SELECT a.module_id,a.module_type,CONCAT(a.module_type,'_',a.module_id) AS module_sign,COUNT(*) AS comments FROM blog_comment a
+		WHERE a.comment_status = 0<!-- NORMAL -->
+		AND a.module_type = #{type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+		 AND a.module_id = #{id} 
+		GROUP BY a.module_type,a.module_id
+	</select>
+	
+	<select id="selectTotalCommentCount" resultType="int">
+		<choose>
+			<when test="type.name() == 'ARTICLE'">
+				SELECT
+					COUNT(a.id)
+				FROM
+					blog_comment a
+				LEFT OUTER JOIN blog_article art ON a.module_id = art.id
+				LEFT OUTER JOIN blog_space sp ON art.space_id = sp.id
+				WHERE 
+					a.comment_status = 0<!-- NORMAL -->
+					AND art.art_status = 0<!-- published -->
+					AND a.module_type = #{type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+				<if test="space != null">
+					AND art.space_id = #{space.id}
+				</if>
+				<if test="!queryPrivate">
+					AND art.isPrivate = false
+					AND sp.is_private = false
+				</if>
+			</when>
+			<otherwise>
+				SELECT
+					COUNT(a.id)
+				FROM
+					blog_comment a
+				LEFT OUTER JOIN blog_page_user bpu ON a.module_id = bpu.id
+				LEFT OUTER JOIN blog_space sp ON bpu.space_id = sp.id
+				WHERE 
+					a.comment_status = 0<!-- NORMAL -->
+					AND a.module_type = #{type,javaType=ModuleType,typeHandler=EnumOrdinalTypeHandler}
+				<if test="space != null">
+					AND bpu.space_id = #{space.id}
+				</if>
+				<if test="!queryPrivate">
+					AND sp.is_private = false
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="queryUncheckCommentsCount" resultType="int">
+		SELECT COUNT(id) FROM blog_comment 
+		WHERE comment_status = 1
+	</select>
+	
+	<select id="queryUncheckComments" resultMap="CommentDetail">
+		 SELECT 
+		  a.id,a.parent_id,a.parent_path,a.content,a.module_id,a.module_type,a.comment_editor,
+		  a.comment_date,a.comment_status,a.comment_nickname,a.comment_email,a.comment_ip,a.comment_admin,a.comment_gravatar,a.comment_website,
+		  p.comment_editor AS p_comment_edtior,p.comment_nickname AS p_comment_nickname,p.comment_email AS p_comment_email,p.comment_ip AS p_comment_ip,p.comment_admin AS p_comment_admin,p.comment_gravatar AS p_comment_gravatar,p.module_id AS p_module_id,p.module_type AS p_module_type
+		FROM 
+		  blog_comment a 
+		LEFT OUTER JOIN blog_comment p ON a.parent_id = p.id
+		WHERE a.comment_status = 1
+	    ORDER BY a.comment_date DESC,id DESC
+		LIMIT #{offset},#{pageSize}
+	</select>
+	
+</mapper>

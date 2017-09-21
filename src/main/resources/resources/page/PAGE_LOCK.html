@@ -1,0 +1,18 @@
+<!-- 只能在lock == null的时候跳转页面，其他情况跳转会引起页面死循环！！！ -->
+<redirect th:url="${urls.url}" th:if="${lock == null}" />
+<!DOCTYPE html>
+<html>
+<head th:replace="base/head_source :: head('解锁后才能访问资源')"></head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-8">
+				<!-- 查找名称为 lockType 的fragment-->
+				<fragment th:name="${lock.lockType}" />
+			</div>
+		</div>
+	</div>
+	<div th:replace="base/foot"></div>
+	<div th:replace="base/foot_source"></div>
+</body>
+</html>

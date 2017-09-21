@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+	 http://www.springframework.org/schema/beans
+	 http://www.springframework.org/schema/beans/spring-beans.xsd
+	 http://www.springframework.org/schema/mvc
+	 http://www.springframework.org/schema/mvc/spring-mvc.xsd
+	 http://www.springframework.org/schema/context
+	 http://www.springframework.org/schema/context/spring-context.xsd
+	 http://www.springframework.org/schema/aop 
+	 http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	 http://www.springframework.org/schema/task
+	 http://www.springframework.org/schema/task/spring-task-4.0.xsd ">
+
+
+	<import resource="ui.xml" />
+
+	<mvc:resources mapping="/favicon.ico" location="/static/img/favicon.ico" />
+
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.support.StandardServletMultipartResolver" />
+
+	<!-- <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/> -->
+
+	<mvc:resources location="/static/" mapping="/static/**"
+		cache-period="31556926" />
+
+	<mvc:resources location="/doc/" mapping="/doc/**"
+		cache-period="31556926" />
+
+	<!-- 包扫描 -->
+	<context:component-scan base-package="me.wangkang.blog.web" />
+
+
+	<!-- USE TemplateWebConfig instead <mvc:annotation-driven> <mvc:message-converters> 
+		<bean class="org.springframework.http.converter.json.GsonHttpMessageConverter"> 
+		<property name="gson" value="#{T(me.wangkang.blog.util.Jsons).getGson()}" /> </bean> 
+		</mvc:message-converters> <mvc:argument-resolvers> <bean class="me.wangkang.blog.core.lock.LockArgumentResolver" 
+		/> </mvc:argument-resolvers> <mvc:return-value-handlers> <bean class="me.wangkang.blog.web.templateReturnHandler"></bean> 
+		</mvc:return-value-handlers> </mvc:annotation-driven> -->
+
+	<!-- csrf token store stragey -->
+	<bean class="me.wangkang.blog.web.security.HttpSessionCsrfTokenRepository" />
+
+	<bean id="appInterceptor" class="me.wangkang.blog.web.interceptor.AppInterceptor">
+		<property name="ipGetter">
+			<bean class="me.wangkang.blog.web.ProxyIPGetter" />
+		</property>
+	</bean>
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<ref bean="appInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+
+	<bean id="templateEngine"
+		class="me.wangkang.blog.web.template.thymeleaf.ThymeleafTemplateEngine">
+		<property name="templateResolvers">
+			<set>
+				<bean
+					class="org.thymeleaf.spring4.templateresolver.SpringResourceTemplateResolver">
+					<property name="prefix" value="/WEB-INF/templates/" />
+					<property name="suffix" value=".html" />
+					<property name="templateMode" value="HTML" />
+					<property name="characterEncoding" value="utf-8" />
+				</bean>
+				<bean class="me.wangkang.blog.web.template.thymeleaf.ThymeleafTemplateResolver" />
+			</set>
+		</property>
+		<property name="enableSpringELCompiler" value="true" />
+		<property name="cacheManager">
+			<bean class="me.wangkang.blog.web.template.thymeleaf.ThymeleafCacheManager" />
+		</property>
+	</bean>
+
+	<bean class="me.wangkang.blog.web.template.TemplateRender">
+		<property name="pros">
+			<map>
+				<entry key="gravatarPrefix" value="https://cn.gravatar.com/avatar/" />
+			</map>
+		</property>
+	</bean>
+
+	<bean class="me.wangkang.blog.web.template.thymeleaf.ThymeleafRenderExecutor" />
+	<bean
+		class="me.wangkang.blog.web.template.thymeleaf.ThymleafTemplateExceptionTransalater" />
+
+	<bean class="me.wangkang.blog.support.file.local.ImageResourceStore">
+		<constructor-arg value="image" index="0" />
+		<constructor-arg value="2" index="1" type="int" />
+		<property name="absPath" value="/web/file/blog_image/" />
+		<property name="id" value="1" />
+		<property name="thumbAbsPath" value="/web/file/blog_image_thumb" />
+		<property name="cacheSeconds" value="31556926" />
+		<property name="supportWebp" value="true" />
+		<property name="name" value="图片存储" />
+		<property name="smallResize">
+			<bean class="me.wangkang.blog.core.file.Resize">
+				<constructor-arg value="200" />
+			</bean>
+		</property>
+		<property name="middleResize">
+			<bean class="me.wangkang.blog.core.file.Resize">
+				<constructor-arg value="600" />
+			</bean>
+		</property>
+		<property name="largeResize">
+			<bean class="me.wangkang.blog.core.file.Resize">
+				<constructor-arg value="900" />
+			</bean>
+		</property>
+		<property name="resizeValidator">
+			<bean class="me.wangkang.blog.core.file.DefaultResizeValidator">
+				<property name="allowSizes">
+					<array>
+						<value>64</value>
+						<value>100</value>
+						<value>160</value>
+						<value>200</value>
+						<value>400</value>
+						<value>600</value>
+						<value>900</value>
+						<value>1300</value>
+						<value>1920</value>
+					</array>
+				</property>
+			</bean>
+		</property>
+	</bean>
+	<bean class="me.wangkang.blog.support.file.local.CommonResourceStore">
+		<property name="absPath" value="/web/file/blog_file" />
+		<property name="id" value="2" />
+		<property name="name" value="文件存储" />
+		<property name="cacheSeconds" value="31556926" />
+	</bean>
+</beans>

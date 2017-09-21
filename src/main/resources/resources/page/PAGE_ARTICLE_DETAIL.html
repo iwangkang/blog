@@ -1,0 +1,48 @@
+<transaction:begin />
+<data name="上一篇下一篇" th:idOrAlias="${idOrAlias}" />
+<data name="文章详情" th:idOrAlias="${idOrAlias}"/>
+<transaction:end />
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<meta name="description" th:content="${article.summary}" />
+<meta name="keywords" th:content="${article.tagStr}" />
+<link rel="stylesheet"
+	th:href="@{/static/bootstrap/css/bootstrap.min.css}" />
+<link th:href="@{/static/css/blog.css}" rel="stylesheet">
+<link th:href="@{/static/css/markdown.css}" rel="stylesheet"
+	th:if="${article.editor.name() == 'MD'}">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+	  <script th:src="@{/static/js/html5shiv.min.js}"></script>
+	  <script th:src="@{/static/js/respond.min.js}"></script>
+	<![endif]-->
+<title th:text="${article.title}">文章详情</title>
+</head>
+<body>
+	<fragment name="顶部导航" />
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-8 col-md-8  col-sm-8 text">
+				<fragment name="文章详情"></fragment>
+				<fragment name="上一篇下一篇"></fragment>
+				<div id="comments-container" style="margin-top: 10px"></div>
+				<div id="page-bar" style="margin-top: 10px"></div>
+			</div>
+		</div>
+	</div>
+	<input type="hidden" id="articleId" th:value="${article.id}" />
+	<input type="hidden" id="login" th:value="${user != null}" />
+	<input type="hidden" id="urlPrefix" th:value="${urls.currentUrl}" />
+	<fragment name="底部" />
+	<div th:replace="base/foot_source">&nbsp;</div>
+	<script type="text/javascript" th:src="@{/static/js/article.js}"></script>
+	<script type="text/javascript" th:src="@{/static/js/comment.js}"></script>
+</body>
+</html>

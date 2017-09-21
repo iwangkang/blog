@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<typeAliases>
+		<typeAlias type="org.apache.ibatis.type.EnumOrdinalTypeHandler"
+			alias="EnumOrdinalTypeHandler" />
+		<typeAlias type="me.wangkang.blog.core.mybatis.handler.TagsTypeHandler"
+			alias="TagsTypeHandler" />
+
+		<typeAlias type="me.wangkang.blog.core.entity.Article" alias="Article" />
+		<typeAlias type="me.wangkang.blog.core.entity.Article$ArticleStatus"
+			alias="ArticleStatus" />
+		<typeAlias type="me.wangkang.blog.core.entity.Article$ArticleFrom"
+			alias="ArticleFrom" />
+		<typeAlias type="me.wangkang.blog.core.entity.Editor" alias="Editor" />
+		<typeAlias type="me.wangkang.blog.core.entity.Tag" alias="Tag" />
+
+		<typeAlias type="me.wangkang.blog.core.entity.Space" alias="Space" />
+
+		<typeAlias type="me.wangkang.blog.core.entity.BlogFile" alias="BlogFile" />
+		<typeAlias type="me.wangkang.blog.core.entity.BlogFile$BlogFileType"
+			alias="BlogFileType" />
+		<typeAlias type="me.wangkang.blog.core.file.CommonFile" alias="CommonFile" />
+		<typeAlias type="me.wangkang.blog.core.entity.FileDelete" alias="FileDelete" />
+
+		<typeAlias type="me.wangkang.blog.core.lock.SysLock" alias="SysLock" />
+		<typeAlias type="me.wangkang.blog.core.lock.SysLock$SysLockType"
+			alias="LockType" />
+		<typeAlias type="me.wangkang.blog.core.lock.PasswordLock" alias="PasswordLock" />
+		<typeAlias type="me.wangkang.blog.core.lock.QALock" alias="QALock" />
+
+		<typeAlias type="me.wangkang.blog.core.vo.BlogFileCount" alias="BlogFileCount" />
+
+		<typeAlias type="me.wangkang.blog.web.template.Page" alias="Page" />
+		<typeAlias type="me.wangkang.blog.web.template.Fragment"
+			alias="Fragment" />
+
+		<typeAlias
+			type="me.wangkang.blog.core.vo.ArticleStatistics"
+			alias="ArticleStatistics" />
+		<typeAlias
+			type="me.wangkang.blog.core.vo.ArticleSpaceStatistics"
+			alias="ArticleSpaceStatistics" />
+
+		<typeAlias type="me.wangkang.blog.core.entity.Comment" alias="Comment" />
+		<typeAlias type="me.wangkang.blog.core.entity.Comment$CommentStatus"
+			alias="CommentStatus" />
+		<typeAlias type="me.wangkang.blog.core.entity.CommentModule"
+			alias="CommentModule" />
+		<typeAlias type="me.wangkang.blog.core.entity.CommentModule$ModuleType"
+			alias="ModuleType" />
+	</typeAliases>
+	<typeHandlers>
+		<typeHandler handler="me.wangkang.blog.core.mybatis.handler.TagsTypeHandler" />
+	</typeHandlers>
+	<mappers>
+		<mapper resource="resources/mybatis/mapper/spaceMapper.xml" />
+
+		<mapper resource="resources/mybatis/mapper/articleMapper.xml" />
+		<mapper resource="resources/mybatis/mapper/articleTagMapper.xml" />
+		<mapper resource="resources/mybatis/mapper/tagMapper.xml" />
+
+		<mapper resource="resources/mybatis/mapper/blogFileMapper.xml" />
+		<mapper resource="resources/mybatis/mapper/blogCommonFileMapper.xml" />
+
+		<mapper resource="resources/mybatis/mapper/lockMapper.xml" />
+
+		<mapper resource="resources/mybatis/mapper/fragmentMapper.xml" />
+		<mapper resource="resources/mybatis/mapper/pageMapper.xml" />
+
+		<mapper resource="resources/mybatis/mapper/fileDeleteMapper.xml" />
+
+		<mapper resource="resources/mybatis/mapper/commentMapper.xml" />
+	</mappers>
+</configuration>
