@@ -1,0 +1,65 @@
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文章归档标签</title>
+
+<!-- Bootstrap -->
+<link href="../../static/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet">
+
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+      <script src="../../static/js/html5shiv.min.js"></script>
+      <script src="../../static/js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+				<h2>文章归档标签</h2>
+				<h3>基本用法</h3>
+				<pre>调用：
+&lt;data name="文章归档"/&gt;
+&lt;data name="文章归档" mode="YMD"/&gt;
+输出结果：
+&lt;pre th:text="${archives }"&gt;&lt;/pre&gt;</pre>
+				<h3>标签属性</h3>
+				<div class="table-responsive">
+					<table class="table">
+						<tr>
+							<th width="10%">属性名</th>
+							<th width="10%">属性类型</th>
+							<th width="10%">是否必须</th>
+							<th width="10%">默认值</th>
+							<th width="60%">说明</th>
+						</tr>
+
+						<tr>
+							<td>mode</td>
+							<td>enum</td>
+							<td>否</td>
+							<td>YMD</td>
+							<td>归档模式，为Y(按年归档)|YM(按年月归档)|YMD(按年月日归档)其中之一</td>
+						</tr>
+					</table>
+				</div>
+				<h3>返回结果</h3>
+				<p>
+					返回一个<b>不为null</b>的ArticleArchiveTree，ArticleArchiveTree可访问属性描述如下:</a>
+				</p>
+
+				
+
+			</div>
+		</div>
+	</div>
+
+	<script src="../../static/jquery/jquery.min.js"></script>
+	<script src="../../static/bootstrap/js/bootstrap.min.js"></script>
+</body>
+</html>
