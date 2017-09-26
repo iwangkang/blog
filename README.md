@@ -26,11 +26,7 @@
 
 * sitemap
 
-## demo: https://www.wangkang.me
-
-## detail: https://www.wangkang.me/project/blog
-
-## changelog: https://www.wangkang.me/changelog
+## demo: http://www.wangkang.me
 
 
 ## version
