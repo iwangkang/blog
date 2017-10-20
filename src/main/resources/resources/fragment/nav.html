@@ -16,6 +16,7 @@
 				<li><a th:href="${urls.currentUrl+'/archives'}">文章归档</a></li>
 				<li th:if="${user != null}"><a
 					th:href="${urls.url+'/mgr/article/index'}">管理台</a></li>
+				<li><a href="https://github.com/iwangkang" target="_blank"><i class="fa fa-github fa-x" aria-hidden="true"></i>&nbsp;Github</a></li>
 				<li th:if="${user == null}"><a th:href="${urls.url+'/login'}">登录</a></li>
 			</ul>
 
